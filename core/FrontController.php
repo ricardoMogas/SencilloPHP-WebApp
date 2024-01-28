@@ -1,73 +1,64 @@
 <?php
+require_once "core/ConexionDB.php";
+require_once "core/responseData.class.php";
+
 class FrontController {
-    private $controller;
+    private $checkSession = true; // Indica si se debe verificar la sesión
 
     public function __construct() {
-        // Obtener la ruta de la URL
+        spl_autoload_register([$this, 'autoload']);
+        $this->handleRouting();
+    }
+
+    public function isSessionStarted() {
+        return $this->checkSession && isset($_SESSION['user_id']); // Cambia 'user_id' por el nombre de la variable de sesión que utilizas
+    }
+
+    private function autoload($nameClass) {
+        $classFile = './controllers/' . $nameClass . '.php';
+        if (file_exists($classFile)) {
+            include_once $classFile;
+        } else {
+            $this->handleClassNotFound($nameClass);
+        }
+    }
+
+    private function handleClassNotFound($nameClass) {
+        if ($nameClass != 'DefaultController') {
+            $responseData = new responseData;
+            $responseError = $responseData->error_404();
+            header('Content-Type: application/json');
+            echo json_encode($responseError);
+        } else {
+            $this->handleDefaultController();
+        }
+    }
+
+    private function handleDefaultController() {
+        if (empty($_GET['controller'])) {
+            $_GET['controller'] = 'index';
+            require_once './web-app/public/index.html'; // Cambia la ruta según tu estructura de archivos
+        }
+    }
+
+    private function handleRouting() {
         $url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
-        
-        // Separar la ruta en segmentos
         $urlSegments = explode('/', trim($url, '/'));
 
-        // Obtener el nombre del controlador
         $controllerName = !empty($urlSegments[1]) ? ucfirst($urlSegments[1]) : 'Default';
-
-        // Formar el nombre completo del controlador
         $controllerClassName = $controllerName . 'Controller';
 
-        // Verificar si la clase del controlador existe
         if (class_exists($controllerClassName)) {
-            // Instanciar el controlador
-            $this->controller = new $controllerClassName();
-        } else {
-            // Si no existe, utilizar un controlador por defecto o mostrar un error
-            $this->controller = new DefaultController();
+            $controller = new $controllerClassName();
+            $action = !empty($urlSegments[2]) ? $urlSegments[2] : 'index';
+
+            if (method_exists($controller, $action)) {
+                $params = array_slice($urlSegments, 3);
+                call_user_func_array([$controller, $action], $params);
+            } else {
+                echo "Método no encontrado";
+            }
         }
     }
-
-    public function run() {
-        // Obtener la acción de la URL, o usar 'index' por defecto
-        $action = isset($_GET['action']) ? $_GET['action'] : 'index';
-
-        // Agregar una acción por defecto si no se proporciona ninguna
-        if (!method_exists($this->controller, $action)) {
-            $action = 'index';
-        }
-
-        // Obtener parámetros de la URL
-        $urlParams = array_slice(explode('/', trim($_SERVER['REQUEST_URI'], '/')), 2);
-
-        // Ejecutar el método del controlador con los parámetros
-        $this->controller->{$action}(...$urlParams);
-    }
 }
 
-
-
-class DefaultController {
-    public function index() {
-        echo "Página de inicio";
-    }
-
-    public function about() {
-        echo "Acerca de nosotros";
-    }
-}
-
-class OtherController {
-    public function someAction() {
-        echo "Alguna acción";
-    }
-}
-
-class UserController {
-    public function getUser($userId) {
-        echo "Obteniendo información del usuario con ID $userId";
-    }
-}
-
-// Uso del FrontController
-/*
-    $frontController = new FrontController();
-    $frontController->run();
-*/
