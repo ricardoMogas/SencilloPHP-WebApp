@@ -30,14 +30,24 @@ class FrontController {
             header('Content-Type: application/json');
             echo json_encode($responseError);
         } else {
-            $this->handleDefaultController();
+            $this->goToMainPage();
         }
     }
 
-    private function handleDefaultController() {
+    private function goToMainPage() {
         if (empty($_GET['controller'])) {
             $_GET['controller'] = 'index';
-            require_once './web-app/public/index.html'; // Cambia la ruta según tu estructura de archivos
+            if (file_exists('./web-app/index.html')) {
+                require_once './web-app/index.html'; // Cambia la ruta según tu estructura de archivos
+            } else {
+                $responseData = new responseData;
+                header('Content-Type: application/json');
+                $responseError = $responseData->sendJsonResponse(
+                    'error', 
+                    'No se encontró el archivo index.php en la carpeta web-app/public'
+                );
+                echo json_encode($responseError);
+            }
         }
     }
 
