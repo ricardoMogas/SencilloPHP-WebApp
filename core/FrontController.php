@@ -37,8 +37,8 @@ class FrontController {
     private function goToMainPage() {
         if (empty($_GET['controller'])) {
             $_GET['controller'] = 'index';
-            if (file_exists('./web-app/index.html')) {
-                require_once './web-app/index.html'; // Cambia la ruta según tu estructura de archivos
+            if (file_exists('./web-app/index.php')) {
+                require_once './web-app/index.php'; // Cambia la ruta según tu estructura de archivos
             } else {
                 $responseData = new responseData;
                 header('Content-Type: application/json');
