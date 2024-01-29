@@ -25,7 +25,7 @@ class GetUserController extends ConexionDB
         }
     }
 
-    private function getUser()
+    public function getUser()
     {
         $query = "SELECT * FROM user";
         $data = parent::getData($query);

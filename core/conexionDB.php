@@ -31,7 +31,9 @@ class ConexionDB {
             //echo "Conexión a la base de datos cerrada.";
         }
     }
+
     //metodo para convertir UTF8
+    //no usar para datos binario tipo base64
     private function convertUTF8($array) {
         array_walk_recursive($array, function(&$item, $key){
             if (!mb_detect_encoding($item, 'utf-8', true)) {
