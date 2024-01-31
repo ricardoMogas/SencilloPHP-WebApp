@@ -1,6 +1,7 @@
 <?php
 require_once "core/ConexionDB.php";
 require_once "core/responseData.class.php";
+require_once 'core/PageController.php';
 
 class FrontController {
     private $checkSession = true; // Indica si se debe verificar la sesión
@@ -61,13 +62,20 @@ class FrontController {
         if (class_exists($controllerClassName)) {
             $controller = new $controllerClassName();
             $action = !empty($urlSegments[2]) ? $urlSegments[2] : 'index';
-
-            if (method_exists($controller, $action)) {
-                $params = array_slice($urlSegments, 3);
-                call_user_func_array([$controller, $action], $params);
-            } else {
-                echo "Método no encontrado";
+            if ($controllerClassName === 'PageController') {
+                //Se crean las rutas PROVICIONAL
+                $Router = new PageController();
+                $Router->index();   
+            }else {
+                //codigo ates del if
+                if (method_exists($controller, $action)) {
+                    $params = array_slice($urlSegments, 3);
+                    call_user_func_array([$controller, $action], $params);
+                } else {
+                    echo "Método no encontrado";
+                }
             }
+            
         }
     }
 }
